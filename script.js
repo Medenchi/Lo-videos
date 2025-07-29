@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Не забудь вставить свою ссылку на Replit!
-    const REPLIT_JSON_URL = 'https://855b47d2-c46d-4235-95ea-ac3f36572222-00-31oo9xrzresoo.sisko.replit.dev/videos_telegram.json';
+    const REPLIT_JSON_URL = 'https://855b47d2-c46d-4235-95ea-ac3f36572222-00-31oo9xrzresoo.sisko.replit.dev/videos_telegram_full.json';
     // ВАЖНО: Вставь сюда токен своего бота! Он нужен для построения ссылок
     const TELEGRAM_BOT_TOKEN = '8319425372:AAHV_k5uEKY4NHWrQjuMPMTzvi3dT-x6_RM';
 
