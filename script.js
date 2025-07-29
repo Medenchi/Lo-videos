@@ -1,31 +1,35 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Не забудь вставить свою ссылку на Replit!
-    const REPLIT_JSON_URL = 'https://855b47d2-c46d-4235-95ea-ac3f36572222-00-31oo9xrzresoo.sisko.replit.dev/videos_rapidapi_final_v3.json';
-    // ВАЖНО: Вставь сюда токен своего бота! Он нужен для построения ссылок
-    const TELEGRAM_BOT_TOKEN = '8319425372:AAHV_k5uEKY4NHWrQjuMPMTzvi3dT-x6_RM';
+    // --- ВАЖНЫЕ НАСТРОЙКИ ---
+    // Я уже вставил твой ник и имя репозитория-бота
+    const GITHUB_USERNAME = 'Medenchi';
+    const BOT_REPO_NAME = 'loshka-archive-bot'; 
+    
+    // ▼ ▼ ▼ ВСТАВЬ СЮДА СВОЙ НОВЫЙ ТОКЕН ОТ @BotFather! ▼ ▼ ▼
+    const TELEGRAM_BOT_TOKEN = '8319425372:AAHV_k5uEKY4NHWrQjuMPMTzvi3dT-x6_RM'; // ЗАМЕНИ ЭТО НА НОВЫЙ ТОКЕН!
+    // ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲
 
+    // --- КОНЕЦ НАСТРОЕК ---
+
+    const JSON_URL = `https://raw.githubusercontent.com/${GITHUB_USERNAME}/${BOT_REPO_NAME}/main/videos.json`;
     const videoListContainer = document.getElementById('video-list');
 
     async function getFilePath(fileId) {
-        // Запрашиваем у Telegram путь к файлу по его ID
         const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getFile?file_id=${fileId}`);
         const data = await response.json();
-        if (data.ok) {
-            return data.result.file_path;
-        }
+        if (data.ok) return data.result.file_path;
         return null;
     }
 
     async function fetchAndRenderVideos() {
         try {
-            const response = await fetch(`${REPLIT_JSON_URL}?t=${new Date().getTime()}`);
+            const response = await fetch(`${JSON_URL}?t=${new Date().getTime()}`);
             if (!response.ok) throw new Error(`Ошибка сети: ${response.status}`);
             
             const videos = await response.json();
             videoListContainer.innerHTML = '';
 
             if (videos.length === 0) {
-                videoListContainer.innerHTML = '<div class="loading"><p>Видео пока не найдено.</p></div>';
+                videoListContainer.innerHTML = '<div class="loading"><p>Видео пока не найдено. Запустите обработку в репозитории бота.</p></div>';
                 return;
             }
 
@@ -45,7 +49,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 videoItem.innerHTML = videoHTML;
                 videoListContainer.appendChild(videoItem);
 
-                // Асинхронно получаем и устанавливаем источник для первого видео
                 const firstPart = videoData.parts?.[0];
                 if (firstPart) {
                     const filePath = await getFilePath(firstPart.file_id);
@@ -57,16 +60,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            // Добавляем обработчики событий для кнопок
             document.querySelectorAll('.part-btn').forEach(button => {
                 button.addEventListener('click', async (e) => {
                     const targetButton = e.target;
                     const videoId = targetButton.dataset.videoId;
                     const fileId = targetButton.dataset.fileId;
                     const player = document.getElementById(`player-${videoId}`);
-                    
-                    // Показываем спиннер, пока грузится ссылка
-                    player.poster = ''; // можно добавить картинку-заглушку
                     
                     const filePath = await getFilePath(fileId);
                     if (filePath) {
@@ -81,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (error) {
             console.error('Не удалось загрузить видео:', error);
-            videoListContainer.innerHTML = `<div class="loading"><p>Ошибка загрузки списка видео.</p></div>`;
+            videoListContainer.innerHTML = `<div class="loading"><p>Ошибка загрузки списка видео. Возможно, файл videos.json еще не создан.</p></div>`;
         }
     }
 
