@@ -1,9 +1,20 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // ▼ ▼ ▼ ВСТАВЬ СЮДА СВОЮ ССЫЛКУ REPLIT! ▼ ▼ ▼
-    const REPLIT_JSON_URL = 'https://855b47d2-c46d-4235-95ea-ac3f36572222-00-31oo9xrzresoo.sisko.replit.dev/videos_hybrid.json';
-    // ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲
+    // Не забудь вставить свою ссылку на Replit!
+    const REPLIT_JSON_URL = 'https://855b47d2-c46d-4235-95ea-ac3f36572222-00-31oo9xrzresoo.sisko.replit.dev/videos_telegram.json';
+    // ВАЖНО: Вставь сюда токен своего бота! Он нужен для построения ссылок
+    const TELEGRAM_BOT_TOKEN = '8319425372:AAHV_k5uEKY4NHWrQjuMPMTzvi3dT-x6_RM';
 
     const videoListContainer = document.getElementById('video-list');
+
+    async function getFilePath(fileId) {
+        // Запрашиваем у Telegram путь к файлу по его ID
+        const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getFile?file_id=${fileId}`);
+        const data = await response.json();
+        if (data.ok) {
+            return data.result.file_path;
+        }
+        return null;
+    }
 
     async function fetchAndRenderVideos() {
         try {
@@ -18,22 +29,61 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            videos.forEach(video => {
+            for (const videoData of videos) {
                 const videoItem = document.createElement('div');
                 videoItem.className = 'video-item';
-                videoItem.innerHTML = `
-                    <h2>${video.title}</h2>
-                    <video controls preload="metadata">
-                        <source src="${video.url}" type="video/mp4">
-                        Ваш браузер не поддерживает это видео.
-                    </video>
-                `;
+
+                let videoHTML = `<h2>${videoData.title}</h2><video id="player-${videoData.id}" controls preload="metadata"></video>`;
+                
+                if (videoData.parts && videoData.parts.length > 1) {
+                    videoHTML += `<div class="part-buttons">`;
+                    videoData.parts.forEach(part => {
+                        videoHTML += `<button class="part-btn" data-video-id="${videoData.id}" data-file-id="${part.file_id}">Часть ${part.part_num}</button>`;
+                    });
+                    videoHTML += `</div>`;
+                }
+                videoItem.innerHTML = videoHTML;
                 videoListContainer.appendChild(videoItem);
+
+                // Асинхронно получаем и устанавливаем источник для первого видео
+                const firstPart = videoData.parts?.[0];
+                if (firstPart) {
+                    const filePath = await getFilePath(firstPart.file_id);
+                    if (filePath) {
+                        const player = document.getElementById(`player-${videoData.id}`);
+                        player.src = `https://api.telegram.org/file/bot${TELEGRAM_BOT_TOKEN}/${filePath}`;
+                        videoItem.querySelector('.part-btn')?.classList.add('active');
+                    }
+                }
+            }
+
+            // Добавляем обработчики событий для кнопок
+            document.querySelectorAll('.part-btn').forEach(button => {
+                button.addEventListener('click', async (e) => {
+                    const targetButton = e.target;
+                    const videoId = targetButton.dataset.videoId;
+                    const fileId = targetButton.dataset.fileId;
+                    const player = document.getElementById(`player-${videoId}`);
+                    
+                    // Показываем спиннер, пока грузится ссылка
+                    player.poster = ''; // можно добавить картинку-заглушку
+                    
+                    const filePath = await getFilePath(fileId);
+                    if (filePath) {
+                        player.src = `https://api.telegram.org/file/bot${TELEGRAM_BOT_TOKEN}/${filePath}`;
+                        player.play();
+                    }
+
+                    targetButton.closest('.part-buttons').querySelectorAll('.part-btn').forEach(btn => btn.classList.remove('active'));
+                    targetButton.classList.add('active');
+                });
             });
+
         } catch (error) {
             console.error('Не удалось загрузить видео:', error);
             videoListContainer.innerHTML = `<div class="loading"><p>Ошибка загрузки списка видео.</p></div>`;
         }
     }
+
     fetchAndRenderVideos();
 });
