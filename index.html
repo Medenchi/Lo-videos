@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Видео Архив</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="background-grid"></div>
+
+    <main class="content">
+        <header>
+            <h1>Последние Видео</h1>
+            <p class="subtitle">Архив видео с канала, обновляется автоматически</p>
+        </header>
+
+        <div id="video-list" class="video-list">
+            <!-- Сообщение о загрузке, которое заменится списком видео -->
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>Загрузка списка видео...</p>
+            </div>
+        </div>
+
+    </main>
+    
+    <script src="script.js"></script>
+</body>
+</html>
