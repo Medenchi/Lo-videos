@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const BOT_REPO_NAME = 'loshka-archive-bot';
     
     // ▼▼▼ ВСТАВЬ СЮДА ССЫЛКУ НА ТВОЙ НОВЫЙ ПРОЕКТ REPLIT-"КУРЬЕР" ▼▼▼
-    const PROXY_REPLIT_URL = 'https://telegram-proxy-bot.ТВОЕ_ИМЯ.repl.co'; // Замени на свою ссылку!
+    const PROXY_REPLIT_URL = 'https://855b47d2-c46d-4235-95ea-ac3f36572222-00-31oo9xrzresoo.sisko.replit.dev/'; // Замени на свою ссылку!
     // ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲
 
     // --- КОНЕЦ НАСТРОЕК ---
