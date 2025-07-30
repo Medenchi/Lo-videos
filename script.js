@@ -2,95 +2,77 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- ВАЖНЫЕ НАСТРОЙКИ ---
     const GITHUB_USERNAME = 'Medenchi';
     const BOT_REPO_NAME = 'loshka-archive-bot';
-    const TELEGRAM_BOT_TOKEN = '8319425372:AAHV_k5uEKY4NHWrQjuMPMTzvi3dT-x6_RM'; // Не забудь обновить!
+    
+    // ▼▼▼ ВСТАВЬ СЮДА ССЫЛКУ НА ТВОЙ НОВЫЙ ПРОЕКТ REPLIT-"КУРЬЕР" ▼▼▼
+    const PROXY_REPLIT_URL = 'https://telegram-proxy-bot.ТВОЕ_ИМЯ.repl.co'; // Замени на свою ссылку!
+    // ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲
+
     // --- КОНЕЦ НАСТРОЕК ---
 
     const JSON_URL = `https://raw.githubusercontent.com/${GITHUB_USERNAME}/${BOT_REPO_NAME}/main/videos.json`;
     const videoListContainer = document.getElementById('video-list');
-    const spoilerCheckbox = document.getElementById('no-spoilers-checkbox');
 
-    // --- НОВАЯ ФУНКЦИЯ: Превращает время "ММ:СС" в секунды ---
-    function timeToSeconds(timeStr) {
-        if (!timeStr || typeof timeStr !== 'string') return 0;
-        const parts = timeStr.split(':').map(Number);
-        if (parts.length === 2) return parts[0] * 60 + parts[1];
-        if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
-        return 0;
-    }
-    
-    // --- НОВАЯ ФУНКЦИЯ: Перематывает плеер, если нужно ---
-    function handleSpoilerCheck(player) {
-        if (spoilerCheckbox.checked && player.dataset.spoilerTime) {
-            const spoilerSeconds = timeToSeconds(player.dataset.spoilerTime);
-            if (spoilerSeconds > 0 && player.currentTime < spoilerSeconds) {
-                player.currentTime = spoilerSeconds;
+    // --- НОВАЯ ФУНКЦИЯ: Обращается к нашему "курьеру" на Replit ---
+    async function getDirectVideoUrl(fileId) {
+        try {
+            const response = await fetch(`${PROXY_REPLIT_URL}/get_video_url?file_id=${fileId}`);
+            const data = await response.json();
+            if (data.url) {
+                return data.url;
+            } else {
+                console.error("Proxy error:", data.error, data.details);
+                return null;
             }
+        } catch (e) {
+            console.error("Failed to fetch from proxy:", e);
+            return null;
         }
-    }
-
-    async function getFilePath(fileId) {
-        // ... (эта функция без изменений)
     }
 
     async function fetchAndRenderVideos() {
         try {
-            // ... (код загрузки и проверки videos.json)
-            
+            const response = await fetch(`${JSON_URL}?t=${new Date().getTime()}`);
+            if (!response.ok) throw new Error(`Ошибка сети: ${response.status}`);
+            const videos = await response.json();
+            videoListContainer.innerHTML = '';
+            if (videos.length === 0) { /* ... код для пустой витрины ... */ return; }
+
             for (const videoData of videos) {
                 const videoItem = document.createElement('div');
                 videoItem.className = 'video-item';
-
-                // --- ИЗМЕНЕНИЕ: Добавляем data-атрибут с таймкодом ---
-                const spoilerTimeAttr = videoData.spoiler_end_time ? `data-spoiler-time="${videoData.spoiler_end_time}"` : '';
-
-                let videoHTML = `<h2>${videoData.title}</h2><video id="player-${videoData.id}" ${spoilerTimeAttr} controls preload="metadata"></video>`;
-                
-                // ... (код для создания кнопок частей)
+                let videoHTML = `<h2>${videoData.title}</h2><video id="player-${videoData.id}" controls preload="metadata"></video>`;
+                if (videoData.parts && videoData.parts.length > 1) { /* ... код для кнопок ... */ }
                 videoItem.innerHTML = videoHTML;
                 videoListContainer.appendChild(videoItem);
 
                 const firstPart = videoData.parts?.[0];
                 if (firstPart) {
-                    const filePath = await getFilePath(firstPart.file_id);
-                    if (filePath) {
+                    const directUrl = await getDirectVideoUrl(firstPart.file_id); // Используем новую функцию
+                    if (directUrl) {
                         const player = document.getElementById(`player-${videoData.id}`);
-                        player.src = `https://api.telegram.org/file/bot${TELEGRAM_BOT_TOKEN}/${filePath}`;
+                        player.src = directUrl;
                         videoItem.querySelector('.part-btn')?.classList.add('active');
-                        
-                        // --- ИЗМЕНЕНИЕ: Сразу проверяем на спойлер при загрузке ---
-                        player.onloadedmetadata = () => handleSpoilerCheck(player);
                     }
                 }
             }
 
             document.querySelectorAll('.part-btn').forEach(button => {
                 button.addEventListener('click', async (e) => {
-                    // ... (старый код)
-                    if (filePath) {
-                        player.src = `https://api.telegram.org/file/bot${TELEGRAM_BOT_TOKEN}/${filePath}`;
-                        // --- ИЗМЕНЕНИЕ: Проверяем на спойлер при смене части ---
-                        player.onloadedmetadata = () => handleSpoilerCheck(player);
+                    const targetButton = e.target;
+                    const videoId = targetButton.dataset.videoId;
+                    const fileId = targetButton.dataset.fileId;
+                    const player = document.getElementById(`player-${videoId}`);
+                    
+                    const directUrl = await getDirectVideoUrl(fileId); // Используем новую функцию
+                    if (directUrl) {
+                        player.src = directUrl;
                         player.play();
                     }
-                    // ... (старый код)
+                    targetButton.closest('.part-buttons').querySelectorAll('.part-btn').forEach(btn => btn.classList.remove('active'));
+                    targetButton.classList.add('active');
                 });
             });
-
-        } catch (error) {
-            // ... (старый код)
-        }
+        } catch (error) { /* ... код для обработки ошибок ... */ }
     }
-
-    // --- НОВЫЙ КОД: Слушаем изменение галочки ---
-    spoilerCheckbox.addEventListener('change', () => {
-        document.querySelectorAll('video').forEach(player => {
-            if (!spoilerCheckbox.checked && player.currentTime > 0) {
-                // Если галочку сняли, не сбрасываем, даем пользователю смотреть дальше
-            } else {
-                handleSpoilerCheck(player);
-            }
-        });
-    });
-
     fetchAndRenderVideos();
 });
