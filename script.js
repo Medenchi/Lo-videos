@@ -2,14 +2,27 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- ВАЖНЫЕ НАСТРОЙКИ ---
     const GITHUB_USERNAME = 'Medenchi';
     const BOT_REPO_NAME = 'loshka-archive-bot';
-    const PROXY_REPLIT_URL = 'https://855b47d2-c46d-4235-95ea-ac3f36572222-00-31oo9xrzresoo.sisko.replit.dev'; // Твой Replit-курьер
+    // ВАЖНО: Это токен твоего бота, который нужен для построения ссылок на видео
+    const TELEGRAM_BOT_TOKEN = '8319425372:AAHV_k5uEKY4NHWrQjuMPMTzvi3dT-x6_RM';
     // --- КОНЕЦ НАСТРОЕК ---
 
     const JSON_URL = `https://raw.githubusercontent.com/${GITHUB_USERNAME}/${BOT_REPO_NAME}/main/videos.json`;
     const videoListContainer = document.getElementById('video-list');
 
-    function getDirectVideoUrl(fileId) {
-        return `${PROXY_REPLIT_URL}/stream_video?file_id=${fileId}`;
+    async function getFilePath(fileId) {
+        // Эта функция больше не нужна, т.к. прокси нет. Но оставим ее для возможного будущего
+        const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getFile?file_id=${fileId}`);
+        const data = await response.json();
+        if (data.ok) return data.result.file_path;
+        return null;
+    }
+    
+    async function buildDirectVideoUrl(fileId) {
+        const filePath = await getFilePath(fileId);
+        if(filePath) {
+            return `https://api.telegram.org/file/bot${TELEGRAM_BOT_TOKEN}/${filePath}`;
+        }
+        return null;
     }
 
     async function fetchAndRenderVideos() {
@@ -20,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
             videoListContainer.innerHTML = '';
 
             if (videos.length === 0) {
-                videoListContainer.innerHTML = '<div class="loading"><p>Видео пока не найдено.</p></div>';
+                videoListContainer.innerHTML = '<div class="loading"><p>Видео пока не найдено. Запустите обработку через Telegram-бота.</p></div>';
                 return;
             }
 
@@ -28,7 +41,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const videoItem = document.createElement('div');
                 videoItem.className = 'video-item';
                 let videoHTML = `<h2>${videoData.title}</h2><video id="player-${videoData.id}" controls preload="metadata"></video>`;
-                
                 if (videoData.parts && videoData.parts.length > 1) {
                     videoHTML += `<div class="part-buttons">`;
                     videoData.parts.forEach(part => {
@@ -41,42 +53,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const firstPart = videoData.parts?.[0];
                 if (firstPart) {
-                    const directUrl = getDirectVideoUrl(firstPart.file_id);
-                    const player = document.getElementById(`player-${videoData.id}`);
-                    player.src = directUrl;
-                    videoItem.querySelector('.part-btn')?.classList.add('active');
-
-                    // --- НОВАЯ ЛОГИКА АВТОПЕРЕКЛЮЧЕНИЯ ---
-                    player.addEventListener('ended', (event) => {
-                        console.log('Видео закончилось, ищем следующую часть...');
-                        const currentVideoItem = event.target.closest('.video-item');
-                        const activeButton = currentVideoItem.querySelector('.part-btn.active');
-                        const allButtons = Array.from(currentVideoItem.querySelectorAll('.part-btn'));
-                        
-                        const currentIndex = allButtons.indexOf(activeButton);
-                        if (currentIndex !== -1 && currentIndex < allButtons.length - 1) {
-                            const nextButton = allButtons[currentIndex + 1];
-                            console.log('Найдена следующая часть, нажимаю...');
-                            nextButton.click(); // Программно "нажимаем" на следующую кнопку
-                        } else {
-                            console.log('Это была последняя часть.');
-                        }
-                    });
+                    const directUrl = await buildDirectVideoUrl(firstPart.file_id);
+                    if (directUrl) {
+                        const player = document.getElementById(`player-${videoData.id}`);
+                        player.src = directUrl;
+                        videoItem.querySelector('.part-btn')?.classList.add('active');
+                    }
                 }
             }
 
             document.querySelectorAll('.part-btn').forEach(button => {
-                button.addEventListener('click', (e) => {
+                button.addEventListener('click', async (e) => {
                     const targetButton = e.target;
                     const videoId = targetButton.dataset.videoId;
                     const fileId = targetButton.dataset.fileId;
                     const player = document.getElementById(`player-${videoId}`);
                     
-                    const directUrl = getDirectVideoUrl(fileId);
-                    player.src = directUrl;
-                    player.play(); // Запускаем воспроизведение
+                    const directUrl = await buildDirectVideoUrl(fileId);
+                    if (directUrl) {
+                        player.src = directUrl;
+                        player.play();
+                    }
                     
-                    // Обновляем активную кнопку
                     targetButton.closest('.part-buttons').querySelectorAll('.part-btn').forEach(btn => btn.classList.remove('active'));
                     targetButton.classList.add('active');
                 });
@@ -87,6 +85,5 @@ document.addEventListener('DOMContentLoaded', () => {
             videoListContainer.innerHTML = `<div class="loading"><p>Ошибка загрузки списка видео.</p></div>`;
         }
     }
-    
     fetchAndRenderVideos();
 });
