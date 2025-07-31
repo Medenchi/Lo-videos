@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ▼▼▼ Я ВСТАВИЛ ТВОЮ ССЫЛКУ REPLIT И НОВЫЙ ТОКЕН ▼▼▼
     // Убедись, что ссылка на Replit-прокси правильная. Если будешь использовать Render, заменишь ее.
     const PROXY_REPLIT_URL = 'https://archive-admin-bot-1.onrender.com';
-    const TELEGRAM_BOT_TOKEN_FOR_JS = '8319425372:AAFfi0OB7A_IaMWoEQFbbUvpwTnluELVfEQ'; // Твой НОВЫЙ токен
+    const TELEGRAM_BOT_TOKEN_FOR_JS = '8319425372:AAELgw2BnbWNsyb6CeIk34FTOfo3ntGcgQI'; // Твой НОВЫЙ токен
     // ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲ ▲
 
     const JSON_URL = `https://raw.githubusercontent.com/${GITHUB_USERNAME}/${BOT_REPO_NAME}/main/videos.json`;
